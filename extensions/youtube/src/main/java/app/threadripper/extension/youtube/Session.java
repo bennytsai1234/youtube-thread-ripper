@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
  *   last received byte, never spliced.
  * - At most {@code window} chunks are buffered or in flight past the read position, bounding memory.
  * - close() cancels every request; nothing is delivered after close.
+ * - Request priority falls with distance from the read position, so the bytes the player needs
+ *   first are not slowed down by chunks further ahead (at startup on a slow link, equal shares
+ *   would make the player wait for all concurrent chunks before the first one completes).
  */
 final class Session {
     /** No byte for this long on an active request: cancel and resume elsewhere. */
@@ -38,6 +41,9 @@ final class Session {
     private static final long FIRST_RESPONSE_MS = 10000;
     private static final int MAX_ATTEMPTS = 4;
     private static final int READ_BUFFER = 64 * 1024;
+    /** Cronet REQUEST_PRIORITY_HIGHEST (4) down to REQUEST_PRIORITY_LOWEST (1). */
+    private static final int PRIORITY_HIGHEST = 4;
+    private static final int PRIORITY_LOWEST = 1;
 
     private static final ExecutorService CALLBACKS = Executors.newFixedThreadPool(2, r -> {
         Thread t = new Thread(r, "ThreadRipper-net");
@@ -205,7 +211,7 @@ final class Session {
         String url = baseUrl + "&range=" + from + "-" + to;
         UrlRequest.Builder builder = engine.newUrlRequestBuilder(url, new ChunkCallback(c), CALLBACKS)
                 .setHttpMethod("GET")
-                .setPriority(3);
+                .setPriority(Math.max(PRIORITY_LOWEST, PRIORITY_HIGHEST - (c.index - readChunk)));
         for (Map.Entry<String, String> h : headers.entrySet()) {
             builder.addHeader(h.getKey(), h.getValue());
         }

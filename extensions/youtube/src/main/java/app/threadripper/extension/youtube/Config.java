@@ -13,6 +13,9 @@ import java.lang.reflect.Method;
  * debug.tr.chunk_kib      1024   chunk size
  * debug.tr.min_split_kib  1024   smaller ranges stay with the app
  * debug.tr.log            false  per-request log lines (info level)
+ * debug.tr.preload_s      90     keep loading until this much video (seconds of media time) is
+ *                                buffered; 0 leaves the app's LoadControl decision unchanged
+ * debug.tr.preload_mib    250    preload stops when the player's buffer allocator holds this much
  * </pre>
  */
 final class Config {
@@ -21,8 +24,11 @@ final class Config {
     final int chunkBytes;
     final long minSplitBytes;
     final boolean log;
+    final long preloadUs;
+    final long preloadCapBytes;
 
     private static volatile Config last;
+    private static volatile long lastReadMs;
 
     private Config() {
         enabled = bool("enabled", true);
@@ -30,6 +36,20 @@ final class Config {
         chunkBytes = clamp(integer("chunk_kib", 1024), 64, 65536) * 1024;
         minSplitBytes = clamp(integer("min_split_kib", 1024), 0, 1 << 20) * 1024L;
         log = bool("log", false);
+        preloadUs = clamp(integer("preload_s", 90), 0, 3600) * 1_000_000L;
+        preloadCapBytes = clamp(integer("preload_mib", 250), 16, 1024) * 1024L * 1024L;
+    }
+
+    /**
+     * Same as {@link #get()} but reads the properties at most once a second, for hooks the
+     * player calls many times per second (LoadControl runs every playback loop iteration).
+     */
+    static Config cached() {
+        long now = android.os.SystemClock.elapsedRealtime();
+        Config c = last;
+        if (c != null && now - lastReadMs < 1000) return c;
+        lastReadMs = now;
+        return get();
     }
 
     static Config get() {
@@ -47,7 +67,8 @@ final class Config {
         if (!(o instanceof Config)) return false;
         Config c = (Config) o;
         return enabled == c.enabled && threads == c.threads && chunkBytes == c.chunkBytes
-                && minSplitBytes == c.minSplitBytes && log == c.log;
+                && minSplitBytes == c.minSplitBytes && log == c.log
+                && preloadUs == c.preloadUs && preloadCapBytes == c.preloadCapBytes;
     }
 
     @Override
@@ -58,7 +79,8 @@ final class Config {
     @Override
     public String toString() {
         return "enabled=" + enabled + " threads=" + threads + " chunk=" + (chunkBytes / 1024)
-                + "KiB minSplit=" + (minSplitBytes / 1024) + "KiB log=" + log;
+                + "KiB minSplit=" + (minSplitBytes / 1024) + "KiB log=" + log
+                + " preload=" + (preloadUs / 1_000_000) + "s/" + (preloadCapBytes >> 20) + "MiB";
     }
 
     private static final Method GET;
