@@ -6,9 +6,18 @@ playback with spoofed (non-SABR) video streams smoother:
 | Patch | What it does |
 |---|---|
 | **Multi-connection video download** | Splits each video byte range into 1 MiB chunks, downloads them over 8 concurrent requests on the app's own network stack (Cronet, HTTP/3), and hands the bytes to the player strictly in order. The chunk the player is waiting for gets the highest request priority, so startup is not slowed by chunks further ahead. |
-| **Video buffer preload** | Lets the player keep loading until 300 s of video is buffered or the buffer holds 250 MiB, whichever comes first. YouTube itself stops at about 21 MB, which is only 10–25 s of 4K. |
+| **Video buffer preload** | Lets the player keep loading until 900 s of video is buffered or the buffer holds 250 MiB, whichever comes first. YouTube itself stops at about 21 MB, which is only 10–25 s of 4K. |
+| **Stall recovery** | Adds an option, off by default, to resume playback after a stall once 1.6 s of video is buffered instead of the app's 5 s. It may stall again sooner, so try it and keep it only if it feels better. |
 
-Both patches are on by default and need no setup.
+All patches are on by default and need no setup. Their options are in **YouTube → Settings →
+Morphe → Thread Ripper** (this screen needs the official Morphe Patches, which add the Morphe
+settings menu).
+
+**Recommended:** also set Morphe's own **Playback buffer size** to **Maximum**. The preload patch
+only turns the app's "stop loading" into "continue"; it never stops loading earlier than the app
+would. With both, you get the larger of the two: at 1080p the official Maximum alone buffers up to
+about 650 s, at 4K the preload patch goes past the official 128 MiB cap (about 120 s instead of
+about 60 s).
 
 [繁體中文說明](#繁體中文說明)
 
@@ -58,10 +67,17 @@ Requires [Morphe Manager](https://github.com/MorpheApp) with the official Morphe
 Verified on YouTube **21.16.256**. The hooks match media3 structure and strings rather than
 obfuscated names, so other versions may work; they are marked experimental.
 
-## Tuning (optional, needs adb)
+## Settings
 
-Settings are Android system properties, read at runtime, so they can be changed without
-repatching. They reset to the defaults on reboot.
+**Morphe → Thread Ripper** has: buffer preload on/off, preload target (seconds of video), preload
+memory limit (MiB, 16–300), multi-connection download on/off, connections per range (1–32),
+"resume sooner after a stall" on/off and its threshold (milliseconds of video, 0–5000).
+Changes apply to the next media request; no restart needed.
+
+### Overrides for testing (adb)
+
+Android system properties override the settings screen. They are read at runtime and reset on
+reboot; an empty value falls back to the settings screen.
 
 | Property | Default | Meaning |
 |---|---|---|
@@ -69,8 +85,9 @@ repatching. They reset to the defaults on reboot.
 | `debug.tr.threads` | `8` | Concurrent requests per range |
 | `debug.tr.chunk_kib` | `1024` | Chunk size |
 | `debug.tr.min_split_kib` | `1024` | Smaller ranges stay with the app |
-| `debug.tr.preload_s` | `300` | Preload target in seconds of video; `0` turns preload off |
+| `debug.tr.preload_s` | `900` | Preload target in seconds of video; `0` turns preload off |
 | `debug.tr.preload_mib` | `250` | Preload memory limit. Keep it at 300 or below: the app itself uses 100–170 MiB of its 512 MiB heap |
+| `debug.tr.rebuffer_ms` | off | After a stall, resume once this much video is buffered (ms, at most 5000); `0` = off |
 | `debug.tr.log` | `false` | Log each range and buffer decision (tag `ThreadRipper`, info level) |
 
 Example: `adb shell setprop debug.tr.preload_s 120`
@@ -101,7 +118,13 @@ details, the on-device test scripts in `scripts/device/`, and how measurements w
 **Thread Ripper patches** 是給 Android 版 YouTube 用的 Morphe 補丁，解決「Spoof video streams」改用非 SABR 用戶端（例如 visionOS）之後，播放容易轉圈的問題。
 
 - **多線下載（Multi-connection video download）**：把每段影片切成 1 MiB 小塊，8 條連線同時下載，再按順序交給播放器。播放器正在等的那一塊優先下載，開播不會被拖慢。
-- **預載（Video buffer preload）**：YouTube 原本只存約 21 MB（4K 約 10–25 秒），網路一頓就轉圈。這個補丁讓它持續補到 300 秒影片或 250 MiB 記憶體為止，以先到者為準。4K 約可存 120 秒，1080p 會先碰到 300 秒。
+- **預載（Video buffer preload）**：YouTube 原本只存約 21 MB（4K 約 10–25 秒），網路一頓就轉圈。這個補丁讓它持續補到 900 秒影片或 250 MiB 記憶體為止，以先到者為準。4K 約可存 120 秒，1080p 會先碰到 900 秒。
+
+**建議設定**：Morphe 自己的「Playback buffer size」也改成 **Maximum**。預載補丁只會把 App 的「停止下載」改成「繼續」，不會讓它提早停，所以兩者一起開等於取大：1080p 用官方 Maximum 可存到約 650 秒，4K 用我們的補丁可超過官方 128 MiB 的上限（約 120 秒，官方約 60 秒）。
+
+**卡住後恢復（Stall recovery）**：預設關閉。開啟後，卡住時只要緩衝 1.6 秒影片就恢復播放，不用等 App 原本的 5 秒；但緩衝較薄，可能比較快又卡住，覺得有改善再留著。
+
+**設定**：YouTube → 設定 → Morphe → **Thread Ripper**，可調預載開關、秒數、記憶體上限、多線下載開關與連線數，以及卡住後恢復的開關與門檻。改完下一個影片請求就生效，不用重開 App。需要和官方 Morphe Patches 一起修補（設定選單是官方補丁加的）。
 
 **安裝**：在 Morphe Manager 新增補丁來源
 `https://raw.githubusercontent.com/bennytsai1234/youtube-thread-ripper/main/patches-bundle.json`

@@ -21,8 +21,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Downloads one media byte range as fixed-size chunks over several concurrent requests and hands
  * the bytes to the player strictly in order, as soon as each byte is contiguous with what was
- * already delivered. googlevideo throttles each request of a spoofed-client stream (measured
- * 5-10 Mbps per request), while concurrent requests for different parts add up.
+ * already delivered. googlevideo limits each request of a spoofed-client stream while concurrent
+ * requests for different parts add up (measured on a PC over HTTP/1.1: 5-10 Mbps per request; on the
+ * phone over HTTP/3 a single request reached 29-85 Mbps, so the gain there depends on the network).
  *
  * Invariants:
  * - Bytes reach the player only in file order, and only bytes that were requested for that exact

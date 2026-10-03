@@ -32,11 +32,24 @@ public final class ThreadRipper {
      */
     public static long open(Object dataSource, Object dataSpec) throws IOException {
         close(dataSource);
+        Config config;
+        MediaRequest request;
         try {
-            Config config = Config.get();
+            config = Config.get();
+            request = config.enabled || config.log ? MediaRequest.parse(dataSpec) : null;
+        } catch (Exception ex) {
+            Log.e("open failure, using the app's loader", ex);
+            return NOT_HANDLED;
+        }
+        long result = open(dataSource, dataSpec, request, config);
+        if (config.log) Timing.open(dataSource, request, result != NOT_HANDLED);
+        return result;
+    }
+
+    private static long open(Object dataSource, Object dataSpec, MediaRequest request, Config config) throws IOException {
+        try {
             if (!config.enabled) return NOT_HANDLED;
 
-            MediaRequest request = MediaRequest.parse(dataSpec);
             if (request == null) {
                 Log.d("Unreadable " + dataSpec);
                 return NOT_HANDLED;
@@ -77,6 +90,7 @@ public final class ThreadRipper {
      * @return bytes read, -1 at the end of input, or {@link #NOT_HANDLED}.
      */
     public static int read(Object dataSource, byte[] buffer, int offset, int length) throws IOException {
+        Timing.read(dataSource);
         Session session;
         synchronized (sessions) {
             session = sessions.get(dataSource);

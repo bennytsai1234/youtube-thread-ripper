@@ -5,6 +5,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.threadripper.patches.youtube.Constants.COMPATIBILITY_YOUTUBE
+import app.threadripper.patches.youtube.settings.settingsResourcePatch
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -24,6 +25,7 @@ val videoBufferPreloadPatch = bytecodePatch(
     compatibleWith(COMPATIBILITY_YOUTUBE)
 
     extendWith("extensions/youtube.mpe")
+    dependsOn(settingsResourcePatch)
 
     execute {
         val method = ShouldContinueLoadingFingerprint.method
