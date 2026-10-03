@@ -1,0 +1,7 @@
+{
+  "created_at": "2026-10-03T16:00:00",
+  "description": "## 0.1.0 (2026-10-03)\n\nFirst release.\n\n### ✨ New Features\n\n* **Multi-connection video download:** download each video byte range of non-SABR (spoofed) streams as 1 MiB chunks over 8 concurrent requests, delivered in order, with the needed chunk at the highest priority.\n* **Video buffer preload:** keep loading until 300 s of video is buffered or the buffer holds 250 MiB, instead of YouTube's ~21 MB limit.\n\nVerified on YouTube 21.16.256 with Morphe Patches 1.45.0 and Spoof video streams = visionOS.",
+  "download_url": "https://github.com/bennytsai1234/youtube-thread-ripper/releases/download/v0.1.0/patches-0.1.0.mpp",
+  "signature_download_url": "",
+  "version": "0.1.0"
+}

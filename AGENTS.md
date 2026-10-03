@@ -1,6 +1,6 @@
 # Thread Ripper patches (YouTube Android, Morphe)
 
-Use Traditional Chinese with the user. Main target: the user's phone (vivo V2417A, Android 16) running YouTube 21.16.256 patched by Morphe Manager with official Morphe Patches v1.45.0, "Spoof video streams" = visionOS. The stutter only happens on the phone; desktop web YouTube is fine.
+Use Traditional Chinese with the maintainer. Reference device: the maintainer's phone (vivo V2417A, China ROM OriginOS, Android 16) running YouTube 21.16.256 patched by Morphe Manager with official Morphe Patches v1.45.0, "Spoof video streams" = visionOS. The stutter only happens on the phone; desktop web YouTube is fine.
 
 ## Why this exists
 
@@ -9,7 +9,7 @@ Use Traditional Chinese with the user. Main target: the user's phone (vivo V2417
 
 ## Layout
 
-- `patches/`: Kotlin bytecode patch `Multi-connection video download` (Morphe patcher). Fingerprints match media3 structure and strings, not obfuscated names.
+- `patches/`: Kotlin bytecode patches `Multi-connection video download` and `Video buffer preload` (Morphe patcher). Fingerprints match media3 structure and strings, not obfuscated names.
 - `extensions/youtube/`: Java runtime (`ThreadRipper` injection points, `Session` scheduler, `MediaRequest` DataSpec reader, `Config`). `extensions/youtube/stub/` holds compile-only Cronet API stubs.
 - `archive/web-userscript/`: frozen v0.2.0 userscript with its own MIT license and BTR attribution.
 
@@ -38,4 +38,15 @@ Not handled (left native): ranges below `min_split_kib`, unknown length, SABR (`
 - Runtime switch without repatching: system properties `debug.tr.enabled`, `debug.tr.threads`, `debug.tr.chunk_kib`, `debug.tr.min_split_kib`, `debug.tr.log`, `debug.tr.preload_s` (default 300, 0 = off), `debug.tr.preload_mib` (default 250) (`adb shell setprop debug.tr.threads 1`), read on every media request. `threads=1, chunk_kib=65536` reproduces the app's one-request-per-segment behaviour for A/B; classify results by the logged actual `threads`, not by intended mode.
 - Stopping a background task in this Windows/Git Bash setup does not kill child scripts; an orphaned A/B loop kept writing settings and mislabeled rounds. Check `ps -ef` and kill leftovers before a new run.
 - Stall ground truth: `scripts/device/freeze-ab.sh` (cold start per period at a fresh position, screen recording) + `freeze-report.sh` (ffmpeg freezedetect, counted after first PLAYING). MediaSession BUFFERING disagreed with what the user saw and is not used as the stall metric. Keep start positions inside the video length.
+- Network diagnosis: `scripts/device/net-monitor.sh OUTDIR CACHE_NODE_IP` samples Wi-Fi, gateway/1.1.1.1/cache-node ping, thermal state and per-range throughput every ~2 s while the phone is used normally. DNS was ruled out for the slow window seen on 2026-10-03 (same node and answers from every resolver; the China ROM itself appends 114.114.114.114 to DHCP DNS).
 - Verify on the phone with uncached videos (a replayed video plays from disk cache and makes no requests). Compare modes interleaved, because network capacity varies minute to minute; a single before/after pair is not evidence.
+
+## Release
+
+Published as a Morphe patch source: Morphe Manager reads `patches-bundle.json` from `main`, which points at the `.mpp` attached to a GitHub release.
+
+1. Bump `version` in `gradle.properties`, build (`./gradlew buildAndroid`), and check the patch on the device.
+2. Update `patches-bundle.json` (`version`, `created_at`, `description`, `download_url` = `https://github.com/bennytsai1234/youtube-thread-ripper/releases/download/v<version>/patches-<version>.mpp`).
+3. Commit, tag `v<version>`, push, then `gh release create v<version> patches/build/libs/patches-<version>.mpp`.
+
+Not done yet: a Morphe settings page (settings are `debug.tr.*` properties only), CI release automation, and checks on YouTube versions other than 21.16.256.
