@@ -2,10 +2,10 @@
 # Ground-truth stall comparison on the phone: screen recording + ffmpeg freezedetect per period.
 # Usage: freeze-ab.sh OUTDIR [ROUNDS] [PERIOD_S] [VIDEO_ID] [START_S] ["OFF A B P"]
 # Modes: OFF native, A one request per segment, B multi-connection, P = B + preload to
-# PRELOAD_S (default 300) seconds of media within PRELOAD_MIB (default 300) of buffer memory.
+# PRELOAD_S (default 300) seconds of media within PRELOAD_MIB (default 250) of buffer memory.
 # Each period cold-starts YouTube at a new, uncached position (START + 600 s per period; keep it
 # inside the video length). Needs scripts/device/sample.sh pushed to /data/local/tmp (done here).
-PRELOAD_S=${PRELOAD_S:-300}; PRELOAD_MIB=${PRELOAD_MIB:-300}
+PRELOAD_S=${PRELOAD_S:-300}; PRELOAD_MIB=${PRELOAD_MIB:-250}
 W="$1"; ROUNDS=${2:-3}; PERIOD=${3:-45}; VID=${4:-3YTohytF9oE}; START=${5:-1800}; MODES=${6:-"OFF B"}
 mkdir -p "$W"; OUT="$W/rows.txt"; : > "$OUT"
 MSYS_NO_PATHCONV=1 adb push "$(dirname "$0")/sample.sh" /data/local/tmp/sample.sh >/dev/null
