@@ -181,7 +181,32 @@ final class Session {
         Log.d("Closed " + (start) + "+" + length + ": delivered " + delivered + " B in " + ms + " ms = "
                 + (delivered * 8 / ms / 1000) + " Mbps, chunks " + chunks.length + ", threads " + threads
                 + ", retries " + retries + ", " + protocol + ", first byte " + firstByteMs + " ms, first chunk "
-                + firstChunkMs + " ms");
+                + firstChunkMs + " ms, slowest" + slowestChunks(3));
+    }
+
+    /** The longest chunk downloads, as " #index Nms/attempts" (unfinished chunks count until now). */
+    private String slowestChunks(int count) {
+        long now = SystemClock.elapsedRealtime();
+        StringBuilder sb = new StringBuilder();
+        boolean[] used = new boolean[chunks.length];
+        for (int k = 0; k < count; k++) {
+            int best = -1;
+            long bestMs = -1;
+            for (int i = 0; i < chunks.length; i++) {
+                Chunk c = chunks[i];
+                if (used[i] || c.startedAt == 0) continue;
+                long ms = (c.doneAt != 0 ? c.doneAt : now) - c.startedAt;
+                if (ms > bestMs) {
+                    best = i;
+                    bestMs = ms;
+                }
+            }
+            if (best < 0) break;
+            used[best] = true;
+            sb.append(" #").append(best).append(' ').append(bestMs).append("ms/").append(chunks[best].attempts)
+                    .append(chunks[best].doneAt == 0 ? " unfinished" : "");
+        }
+        return sb.toString();
     }
 
     // region Scheduling
@@ -210,6 +235,7 @@ final class Session {
             return;
         }
         c.attempts++;
+        if (c.startedAt == 0) c.startedAt = SystemClock.elapsedRealtime();
         long from = c.offset + c.filled;
         long to = c.offset + c.size - 1;
         String url = baseUrl + "&range=" + from + "-" + to;
@@ -345,7 +371,8 @@ final class Session {
                 chunk.done = true;
                 chunk.request = null;
                 active--;
-                if (chunk.index == 0) firstChunkMs = SystemClock.elapsedRealtime() - openedAt;
+                chunk.doneAt = SystemClock.elapsedRealtime();
+                if (chunk.index == 0) firstChunkMs = chunk.doneAt - openedAt;
                 startMore();
                 Session.this.notifyAll();
             }
@@ -375,6 +402,9 @@ final class Session {
         int expected;
         int received;
         long lastProgress;
+        /** Start of the first attempt and completion time, for the log. */
+        long startedAt;
+        long doneAt;
 
         Chunk(int index, long offset, int size) {
             this.index = index;
