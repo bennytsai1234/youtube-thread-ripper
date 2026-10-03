@@ -258,3 +258,6 @@ node_modules/
 # Ignore IDEA files
 .idea/
 local.properties
+
+# Local device-testing assets: original APK, signing keystore, tools, decompiled sources, results
+/.local/
