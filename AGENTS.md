@@ -47,6 +47,8 @@ Not handled (left native): ranges below `min_split_kib`, unknown length, SABR (`
 
 Published as a Morphe patch source: Morphe Manager reads `patches-bundle.json` from `main`, which points at the `.mpp` attached to a GitHub release.
 
+The repo is public but for the maintainer's own use: do not list it (awesome-morphe and similar), open issues/PRs upstream, or announce it anywhere unless the maintainer asks.
+
 1. Bump `version` in `gradle.properties`, build (`./gradlew buildAndroid`), and check the patch on the device.
 2. Update `patches-bundle.json` (`version`, `created_at`, `description`, `download_url` = `https://github.com/bennytsai1234/youtube-thread-ripper/releases/download/v<version>/patches-<version>.mpp`).
 3. Commit, tag `v<version>`, push, then `gh release create v<version> patches/build/libs/patches-<version>.mpp`.
