@@ -78,6 +78,9 @@ final class Session {
     private int retries;
     private long delivered;
     private final long openedAt = SystemClock.elapsedRealtime();
+    /** Milliseconds after open until the first byte of the range and until its first chunk was complete. */
+    private long firstByteMs = -1;
+    private long firstChunkMs = -1;
     private ScheduledFuture<?> watchdog;
 
     Session(CronetEngine engine, String url, Map<String, String> headers, long start, long length, Config config) {
@@ -177,7 +180,8 @@ final class Session {
         long ms = Math.max(1, SystemClock.elapsedRealtime() - openedAt);
         Log.d("Closed " + (start) + "+" + length + ": delivered " + delivered + " B in " + ms + " ms = "
                 + (delivered * 8 / ms / 1000) + " Mbps, chunks " + chunks.length + ", threads " + threads
-                + ", retries " + retries + ", " + protocol);
+                + ", retries " + retries + ", " + protocol + ", first byte " + firstByteMs + " ms, first chunk "
+                + firstChunkMs + " ms");
     }
 
     // region Scheduling
@@ -317,6 +321,9 @@ final class Session {
                     request.cancel();
                     return;
                 }
+                if (chunk.index == 0 && chunk.filled == 0 && n > 0) {
+                    firstByteMs = SystemClock.elapsedRealtime() - openedAt;
+                }
                 buffer.get(chunk.data, chunk.filled, n);
                 chunk.filled += n;
                 chunk.received += n;
@@ -338,6 +345,7 @@ final class Session {
                 chunk.done = true;
                 chunk.request = null;
                 active--;
+                if (chunk.index == 0) firstChunkMs = SystemClock.elapsedRealtime() - openedAt;
                 startMore();
                 Session.this.notifyAll();
             }

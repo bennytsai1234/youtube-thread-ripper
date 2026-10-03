@@ -13,9 +13,12 @@ import java.lang.reflect.Method;
  * debug.tr.chunk_kib      1024   chunk size
  * debug.tr.min_split_kib  1024   smaller ranges stay with the app
  * debug.tr.log            false  per-request log lines (info level)
- * debug.tr.preload_s      90     keep loading until this much video (seconds of media time) is
+ * debug.tr.preload_s      300    keep loading until this much video (seconds of media time) is
  *                                buffered; 0 leaves the app's LoadControl decision unchanged
- * debug.tr.preload_mib    250    preload stops when the player's buffer allocator holds this much
+ * debug.tr.preload_mib    300    ...or until the player's buffer allocator holds this much. Whichever
+ *                                comes first: 4K hits the memory limit (~2 MiB per second of
+ *                                media), 1080p the time limit. App Java heap is 512 MiB, and the
+ *                                app itself uses 100-170 MiB, so keep this at 300 or below
  * </pre>
  */
 final class Config {
@@ -36,8 +39,8 @@ final class Config {
         chunkBytes = clamp(integer("chunk_kib", 1024), 64, 65536) * 1024;
         minSplitBytes = clamp(integer("min_split_kib", 1024), 0, 1 << 20) * 1024L;
         log = bool("log", false);
-        preloadUs = clamp(integer("preload_s", 90), 0, 3600) * 1_000_000L;
-        preloadCapBytes = clamp(integer("preload_mib", 250), 16, 1024) * 1024L * 1024L;
+        preloadUs = clamp(integer("preload_s", 300), 0, 3600) * 1_000_000L;
+        preloadCapBytes = clamp(integer("preload_mib", 300), 16, 1024) * 1024L * 1024L;
     }
 
     /**
