@@ -1,6 +1,6 @@
 # BTR-based YouTube fork
 
-Use Traditional Chinese. The user explicitly rejected a hand-built replacement and requires upstream BTR UI/interaction/download code as the base. Preserve that direction.
+The user explicitly rejected a hand-built replacement and requires upstream BTR UI/interaction/download code as the base. Preserve that direction.
 
 - `vendor/btr/`: 11 original LF-normalized files at the manifest's pinned commit. Do not edit them silently. Import a new explicit checkout only when intentionally updating upstream.
 - `scripts/adapt-btr.cjs`: reviewable required site changes; CSS and downloader/notification source remain unchanged. Preserve upstream modal, slider, drag, storage and notification behavior.

@@ -1,6 +1,6 @@
 # Thread Ripper patches (YouTube Android, Morphe)
 
-Use Traditional Chinese with the maintainer. Reference device: the maintainer's phone (vivo V2417A, China ROM OriginOS, Android 16) running YouTube 21.16.256 patched by Morphe Manager with official Morphe Patches v1.45.0, "Spoof video streams" = visionOS. The stutter only happens on the phone; desktop web YouTube is fine.
+Reference device: the maintainer's phone (vivo V2417A, China ROM OriginOS, Android 16) running YouTube 21.16.256 patched by Morphe Manager with official Morphe Patches v1.45.0, "Spoof video streams" = visionOS. The stutter only happens on the phone; desktop web YouTube is fine.
 
 ## Why this exists
 
