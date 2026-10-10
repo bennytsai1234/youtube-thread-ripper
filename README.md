@@ -115,8 +115,7 @@ in `scripts/device/`.
 ## Credits and license
 
 - The chunked, in-order download design follows
-  [Bilibili-thread-ripper](https://github.com/MrTangLuyao/Bilibili-thread-ripper) (BTR); `archive/web-userscript/` keeps an earlier
-  browser userscript with BTR's license and attribution.
+  [Bilibili-thread-ripper](https://github.com/MrTangLuyao/Bilibili-thread-ripper) (BTR).
 - Built with the Morphe patcher and patch template. This project is not affiliated with or endorsed
   by Morphe; see [NOTICE](NOTICE).
 - License: [GPLv3](LICENSE).
