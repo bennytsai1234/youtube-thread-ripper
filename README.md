@@ -108,8 +108,9 @@ GITHUB_ACTOR=<user> GITHUB_TOKEN=$(gh auth token) ./gradlew buildAndroid
 ```
 
 The token needs `read:packages` (Morphe's Gradle plugin and patcher are on GitHub Packages).
-Output: `patches/build/libs/patches-<version>.mpp`. See [AGENTS.md](AGENTS.md) for the hook
-details, the on-device test scripts in `scripts/device/`, and how measurements were taken.
+Output: `patches/build/libs/patches-<version>.mpp`. See [docs/](docs/) for the hook details and
+[docs/measurements.md](docs/measurements.md) for the measurements; the on-device test scripts are
+in `scripts/device/`.
 
 ## Credits and license
 
