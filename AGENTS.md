@@ -43,6 +43,8 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the root. See `docs/agents/doma
 - Stopping a background task in this Windows/Git Bash setup does not kill child scripts; an orphaned A/B loop kept writing settings and mislabeled rounds. Check `ps -ef` and kill leftovers before a new run.
 - The emulator's network latency drifted from ~20 ms to 150–500 ms while the host stayed at 16 ms, and throttling (`emu network speed`) has no effect: use it for LoadControl logic, not for download speed or startup time.
 - On the phone logcat's monotonic clock and /proc/uptime differ (sleep); align them with the TRSYNC line.
+- The Bilibili Thread Ripper patch on the same phone also reads `debug.tr.*` (`warp`, `log`, ...): a property set for one app changes the other (setting `debug.tr.warp` made Bilibili ask for VPN permission). Clear what you set when done.
+- During app start the ROM's per-process log rate limit (`W/ratelimit ... Single process limit`) can drop every line of the app, ours included: log a summary a few seconds later instead of per-event lines, and judge launches from screenshots.
 
 ## Release
 
