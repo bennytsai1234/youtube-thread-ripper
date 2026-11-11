@@ -2,6 +2,8 @@
 
 Reference device: the maintainer's phone (vivo V2417A, China ROM OriginOS, Android 16) running YouTube 21.16.256 patched by Morphe Manager with official Morphe Patches v1.45.0, "Spoof video streams" = visionOS. The stutter only happens on the phone; desktop web YouTube is fine (`docs/adr/0001-android-patch-instead-of-web-userscript.md`).
 
+- Git strategy: branch, fast-forward into `main` when done, no PRs.
+
 ## Agent skills
 
 ### Issue tracker
